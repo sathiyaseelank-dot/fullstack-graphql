@@ -1,0 +1,14 @@
+query GetUsers{
+    users{
+        id 
+        name
+    }
+}
+
+query GetFullUsers{
+    users{
+        id
+        name
+        lname
+    }
+}

@@ -5,6 +5,7 @@ go 1.26.2
 require (
 	github.com/99designs/gqlgen v0.17.89
 	github.com/lib/pq v1.12.3
+	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.32
 )
 

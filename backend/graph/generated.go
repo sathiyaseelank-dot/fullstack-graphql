@@ -37,7 +37,7 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreateUser func(childComplexity int, name string) int
+		CreateUser func(childComplexity int, name string, lname string) int
 	}
 
 	Query struct {
@@ -45,13 +45,14 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		ID    func(childComplexity int) int
+		Lname func(childComplexity int) int
+		Name  func(childComplexity int) int
 	}
 }
 
 type MutationResolver interface {
-	CreateUser(ctx context.Context, name string) (*model.User, error)
+	CreateUser(ctx context.Context, name string, lname string) (*model.User, error)
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
@@ -81,7 +82,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["name"].(string)), true
+		return e.ComplexityRoot.Mutation.CreateUser(childComplexity, args["name"].(string), args["lname"].(string)), true
 
 	case "Query.users":
 		if e.ComplexityRoot.Query.Users == nil {
@@ -96,6 +97,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.User.ID(childComplexity), true
+	case "User.lname":
+		if e.ComplexityRoot.User.Lname == nil {
+			break
+		}
+
+		return e.ComplexityRoot.User.Lname(childComplexity), true
 	case "User.name":
 		if e.ComplexityRoot.User.Name == nil {
 			break
@@ -212,6 +219,11 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 		return nil, err
 	}
 	args["name"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "lname", ec.unmarshalNString2string)
+	if err != nil {
+		return nil, err
+	}
+	args["lname"] = arg1
 	return args, nil
 }
 
@@ -286,7 +298,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		ec.fieldContext_Mutation_createUser,
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["name"].(string))
+			return ec.Resolvers.Mutation().CreateUser(ctx, fc.Args["name"].(string), fc.Args["lname"].(string))
 		},
 		nil,
 		ec.marshalNUser2ᚖbackendᚋgraphᚋmodelᚐUser,
@@ -307,6 +319,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "lname":
+				return ec.fieldContext_User_lname(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -353,6 +367,8 @@ func (ec *executionContext) fieldContext_Query_users(_ context.Context, field gr
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
+			case "lname":
+				return ec.fieldContext_User_lname(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -514,6 +530,35 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 }
 
 func (ec *executionContext) fieldContext_User_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _User_lname(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_User_lname,
+		func(ctx context.Context) (any, error) {
+			return obj.Lname, nil
+		},
+		nil,
+		ec.marshalNString2string,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_User_lname(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "User",
 		Field:      field,
@@ -2119,6 +2164,11 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "name":
 			out.Values[i] = ec._User_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lname":
+			out.Values[i] = ec._User_lname(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

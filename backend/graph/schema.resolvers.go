@@ -12,11 +12,11 @@ import (
 )
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, name string) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, name string, lname string) (*model.User, error) {
 	var id int
 	err := r.DB.QueryRow(
-		"insert into users(name) VALUES($1) RETURNING id",
-		name,
+		"insert into users(name, lname) VALUES($1, $2) RETURNING id",
+		name, lname,
 	).Scan(&id)
 
 	if err != nil {
@@ -25,13 +25,14 @@ func (r *mutationResolver) CreateUser(ctx context.Context, name string) (*model.
 	return &model.User{
 		ID:   strconv.Itoa(id),
 		Name: name,
+		Lname: lname,
 	}, nil
 }
 
 // Users is the resolver for the users field.
 func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	rows, err := r.DB.Query(
-		"SELECT id, name FROM users",
+		"SELECT id, name, lname FROM users",
 	)
 
 	if err != nil {
@@ -44,12 +45,14 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	for rows.Next() {
 		var id int
 		var name string
+		var lname string
 
-		rows.Scan(&id, &name)
+		rows.Scan(&id, &name, &lname)
 
 		users = append(users, &model.User{
 			ID:   strconv.Itoa(id),
 			Name: name,
+			Lname: lname,
 		})
 
 	}

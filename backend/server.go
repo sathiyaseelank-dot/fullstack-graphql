@@ -1,16 +1,15 @@
 package main
 
 import (
-	"backend/graph"
 	"log"
 	"net/http"
 	"os"
-
+	"backend/graph"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/rs/cors"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -22,9 +21,25 @@ func main() {
 		port = defaultPort
 	}
 	db := ConnectDB()
-	
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{DB: db,}}))
 
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{DB: db}}))
+	c := cors.New(cors.Options{AllowedOrigins: []string{
+		"http://localhost:5173",
+	},
+		AllowCredentials: true,
+
+		AllowedHeaders: []string{
+			"*",
+		},
+
+		AllowedMethods: []string{
+			"GET",
+			"POST",
+			"OPTIONS",
+		},
+	})
+
+	http.Handle("/query", c.Handler(srv))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
@@ -36,8 +51,8 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	// http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	// http.Handle("/query", srv)
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

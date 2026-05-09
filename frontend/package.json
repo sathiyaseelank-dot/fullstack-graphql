@@ -6,17 +6,21 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "codegen": "graphql-codegen",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "graphql": "^16.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@graphql-codegen/cli": "^7.0.0",
+    "@graphql-codegen/client-preset": "^6.0.0",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
